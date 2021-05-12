@@ -1,0 +1,81 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: clusterloader-sa
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: clusterloader-role
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "services", "jobs", "daemonsets", "namespaces", "replicationcontrollers", "events"]
+    verbs: ["list", "get", "watch", "create", "update", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["list", "get", "watch", "create", "update", "delete"]
+  - apiGroups: ["extensions","apps"]
+    resources: ["deployments/scale", "replicasets/scale"]
+    verbs: ["list", "get", "watch", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["replicationcontrollers/scale"]
+    verbs: ["list", "get", "watch", "create", "update", "delete"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: clusterloader-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: clusterloader-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: clusterloader-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clusterloader-deployment
+  labels:
+    app: clusterloader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clusterloader
+  template:
+    metadata:
+      labels:
+        app: clusterloader
+    spec:
+      serviceAccountName: clusterloader-sa
+      containers:
+      - name: clusterloader
+        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        args: [ "-c", "sleep 10000" ]
+      - name: clusterloaderservlet
+        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
+        imagePullPolicy: Always
+        command: ["/servlet"]
+        ports:
+        - containerPort: 8080
+        env:
+        - name: TESTRESULTS
+          value: "/junit.xml"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: clusterloader
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: clusterloader
