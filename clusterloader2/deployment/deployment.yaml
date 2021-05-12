@@ -38,7 +38,7 @@ roleRef:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: clusterloader-deployment
+  name: clusterloader
   labels:
     app: clusterloader
 spec:
@@ -52,21 +52,32 @@ spec:
         app: clusterloader
     spec:
       serviceAccountName: clusterloader-sa
+      volumes:
+        - name: testresults
+          emptyDir: {}
       containers:
       - name: clusterloader
         image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
         imagePullPolicy: Always
-        command: ["/bin/sh"]
-        args: [ "-c", "sleep 10000" ]
+        command: ["/bin/bash"]
+        args: [ "-c", "/run-e2e-aks.sh" ]
+        volumeMounts:
+          - mountPath: /results
+            name: testresults
+            readOnly: false
       - name: clusterloaderservlet
         image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
         imagePullPolicy: Always
         command: ["/servlet"]
+        volumeMounts:
+          - mountPath: /results
+            name: testresults
+            readOnly: true
         ports:
         - containerPort: 8080
         env:
         - name: TESTRESULTS
-          value: "/junit.xml"
+          value: "/results/junit.xml"
 ---
 kind: Service
 apiVersion: v1
