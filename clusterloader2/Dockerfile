@@ -25,7 +25,8 @@ RUN chmod +x ./run-e2e-aks.sh
 COPY --from=curler /kubectl /usr/bin/kubectl
 
 RUN apk add --no-cache bash
-RUN apk add --no-cache \
-    libc6-compat
+RUN apk add --no-cache curl
+# libc6-compat should resolve cgo portability issues on alpine
+RUN apk add --no-cache libc6-compat 
 ENTRYPOINT [ "/bin/bash" ]
 CMD ["-c" ,"/run-e2e-aks.sh"]

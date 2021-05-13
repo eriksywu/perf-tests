@@ -57,16 +57,16 @@ spec:
           emptyDir: {}
       containers:
       - name: clusterloader
-        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
+        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test3
         imagePullPolicy: Always
         command: ["/bin/bash"]
-        args: [ "-c", "/run-e2e-aks.sh", "--enable-prometheus-server=true" ]
+        args: [ "-c", "/run-e2e-aks.sh", "--nodes=3" ]
         volumeMounts:
           - mountPath: /results
             name: testresults
             readOnly: false
       - name: clusterloaderservlet
-        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
+        image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test3
         imagePullPolicy: Always
         command: ["/servlet"]
         volumeMounts:

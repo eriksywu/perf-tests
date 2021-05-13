@@ -12,30 +12,49 @@ import (
 	"strings"
 )
 
+var status string
+
 func main() {
 
 	http.HandleFunc("/results", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+func doneHandler(w http.ResponseWriter, r *http.Request) {
+	if status != "" {
+		return
+	}
+	s, k := r.URL.Query()["status"]
+	if !k || len(s) == 0 {
+		return
+	}
+	fmt.Printf("status updated to ", s[0])
+	status = s[0]
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		doneHandler(w, r)
+		return
+	}
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		return
 	}
-	results := make(map[string]interface{})
+
 	testDir := os.Getenv("TESTRESULTS")
 	fmt.Printf("watching over testdir %s \n", testDir)
 	if testDir == "" {
 		testDir = "/"
 	}
-	_, err := os.Stat(filepath.Join(testDir, "done"))
-	if err != nil {
+	if status == "" {
 		w.WriteHeader(400)
 		w.Write([]byte("not done"))
 		return
 	}
-	err = filepath.Walk(testDir, func(path string, info fs.FileInfo, err error) error {
+	results := make(map[string]interface{})
+	results["status"] = status
+	err := filepath.Walk(testDir, func(path string, info fs.FileInfo, err error) error {
 		fmt.Printf("path = %s \n", path)
 		if info == nil || info.IsDir() {
 			return nil
