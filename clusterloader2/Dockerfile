@@ -28,4 +28,4 @@ RUN apk add --no-cache bash
 RUN apk add --no-cache \
     libc6-compat
 ENTRYPOINT [ "/bin/bash" ]
-CMD ["-c" ,"/run-e2e-aks.sh", "--run-from-cluster=true"]
+CMD ["-c" ,"/run-e2e-aks.sh"]

@@ -25,11 +25,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	results := make(map[string]interface{})
 	testDir := os.Getenv("TESTRESULTS")
+	fmt.Printf("watching over testdir %s \n", testDir)
 	if testDir == "" {
 		testDir = "/"
 	}
-
-	err := filepath.Walk(testDir, func(path string, info fs.FileInfo, err error) error {
+	_, err := os.Stat(filepath.Join(testDir, "done"))
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte("not done"))
+		return
+	}
+	err = filepath.Walk(testDir, func(path string, info fs.FileInfo, err error) error {
+		fmt.Printf("path = %s \n", path)
 		if info == nil || info.IsDir() {
 			return nil
 		}
@@ -57,7 +64,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		results[testName] = jsonData
 		return nil
 	})
-
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(fmt.Sprintf("could not fetch results: %s", err)))
+		return
+	}
 	responseBody, err := json.Marshal(results)
 	if err != nil {
 		w.WriteHeader(400)

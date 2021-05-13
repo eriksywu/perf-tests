@@ -60,7 +60,7 @@ spec:
         image: erwe2e.azurecr.io/cl2/clusterloader-aks-e2e:test2
         imagePullPolicy: Always
         command: ["/bin/bash"]
-        args: [ "-c", "/run-e2e-aks.sh" ]
+        args: [ "-c", "/run-e2e-aks.sh", "--enable-prometheus-server=true" ]
         volumeMounts:
           - mountPath: /results
             name: testresults
@@ -77,7 +77,7 @@ spec:
         - containerPort: 8080
         env:
         - name: TESTRESULTS
-          value: "/results/junit.xml"
+          value: "/results"
 ---
 kind: Service
 apiVersion: v1
