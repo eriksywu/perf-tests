@@ -14,6 +14,8 @@ import (
 
 var status string
 
+// this is meant to run as a sidecar server to clusterloader to serve results for e2e handlers
+// TODO: build this in a separate image...currently I'm building this in the same image as clusterloader
 func main() {
 
 	http.HandleFunc("/results", handler)
